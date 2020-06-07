@@ -1,2 +1,9 @@
-first = 2 + 3
-second  = first * 3
+
+b = 1;
+a = (3 + (2 - 1)) * 2 - (4 + 1);
+
+while (a > 0) {
+    if (a > b) {
+        >> a;
+    }
+}

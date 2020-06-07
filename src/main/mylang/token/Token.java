@@ -27,10 +27,8 @@ public class Token {
 
     @Override
     public String toString() {
-        return '\n' + "Token {" +
-                "lexem: " + lexem +
-                ", value: '" + value + '\'' +
-                '}';
+        return "\n      " + "lexem: " + lexem +
+                ", value: '" + value + '\'';
     }
 
 }
