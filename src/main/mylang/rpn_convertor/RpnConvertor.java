@@ -48,11 +48,11 @@ public class RpnConvertor {
             if(curType == Lexem.CLOSE_BRACKET) {
 //                System.out.println("before while " + stack.indexOf(stack.peek()) + stack.peek().toString());
                 while (stack.peek().getLexem() != Lexem.OPEN_BRACKET) {
-                    System.out.println(stack.indexOf(stack.peek()) + stack.peek().toString());
+//                    System.out.println(stack.indexOf(stack.peek()) + stack.peek().toString());
                     rpnList.add(stack.pop());
-                    System.out.println("end of body while " + stack.indexOf(stack.peek()) + stack.peek().toString());
+//                    System.out.println("end of body while " + stack.indexOf(stack.peek()) + stack.peek().toString());
                 }stack.pop();
-                System.out.println("after while " + stack.indexOf(stack.peek()) + stack.peek().toString());
+//                System.out.println("after while " + stack.indexOf(stack.peek()) + stack.peek().toString());
                 continue;
             }
 
@@ -60,13 +60,17 @@ public class RpnConvertor {
                 stack.push(curToken);
             } else {
                 Token topToken = stack.pop();
-                System.out.println("1 " + topToken.toString());
+//                System.out.println("1 " + topToken.toString());
                 while (!stack.empty() && topToken.getLexem().getPriority() >= curType.getPriority()) {
-                    System.out.println("2 " + topToken.toString());
+//                    System.out.println("2 " + topToken.toString());
                     rpnList.add(topToken);
+//                    if (topToken.getLexem().getPriority() >= curType.getPriority()) {
                     topToken = stack.pop();
-                    System.out.println("3 " + topToken.toString());
-                } stack.push(curToken);
+//                    }
+//                    System.out.println("3 " + topToken.toString());
+                }
+                stack.push(topToken);
+                stack.push(curToken);
             }
 //            System.out.println("\n 2 STACK" + stack + "\n2 LIST" + rpnList.toString());
 
