@@ -1,0 +1,10 @@
+
+>> n;
+list l;
+i = 0;
+while (i < n) {
+    >> value;
+    l add value;
+    i = (i + 1);
+}
+<< l;

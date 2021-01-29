@@ -1,11 +1,18 @@
 package main.mylang.token;
 
+import main.mylang.exception.NotImplementedException;
 import main.mylang.lexer.Lexem;
+import main.mylang.triad_optimizer.triad.Triad;
 
-public class Token {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
-    private final Lexem lexem;
-    private final String value;
+public class Token implements Tokenizable {
+
+    private Lexem lexem;
+    private String value;
 
     public Token(Lexem lexem, String value) {
         this.lexem = lexem;
@@ -25,10 +32,16 @@ public class Token {
         return value;
     }
 
+    public void setValue(String value) { this.value = value; }
+
     @Override
     public String toString() {
         return "\n      " + "lexem: " + lexem +
                 ", value: '" + value + '\'';
     }
 
+    @Override
+    public List<Token> tokenize() throws NotImplementedException {
+        return new ArrayList<>(Arrays.asList(this));
+    }
 }

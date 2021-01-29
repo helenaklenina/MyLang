@@ -10,17 +10,17 @@ import java.util.Stack;
 
 public class RpnConvertor {
     private List<Token> tokens;
-    private VarTable varTable;
+//    private VarTable varTable;
 
     private void fromStackToList(Stack<Token> stack, List<Token> list) {
-        while(!stack.empty()) {
+        while (!stack.empty()) {
             list.add(stack.pop());
         }
     }
 
-    public RpnConvertor(List<Token> tokens, VarTable varTable) {
+    public RpnConvertor(List<Token> tokens) {
         this.tokens = tokens;
-        this.varTable = varTable;
+//        this.varTable = varTable;
     }
 
     public List<Token> getRpn() {
@@ -33,8 +33,18 @@ public class RpnConvertor {
         for (Token curToken : tokens) {
             Lexem curType = curToken.getLexem();
 //            System.out.println("currrent " + curToken.toString());
+//            System.out.println("Stack" + stack);
+//            System.out.println("STRING" + rpnList);
+//            System.out.println("rpnTrans" + rpnWithTrans);
+//            System.out.println("While pos" + whileKwPosit);
+//            System.out.println("VarTable" + varTable);
+
+            if (curType.getPriority() < 0) {
+                continue;
+            }
 
             if (curType == Lexem.OUTPUT_OP) {
+                rpnList.add(new Token(Lexem.OUTPUT_NEWLINE, "\n"));
                 fromStackToList(stack, rpnList);
                 stack.add(new Token(Lexem.OUTPUT_OP, "<<"));
                 continue;
@@ -50,11 +60,6 @@ public class RpnConvertor {
             // Если этот символ - число (или переменная), то просто помещаем его в выходную строку.
             if (curType == Lexem.VAR || curType == Lexem.DIGIT) {
                 rpnList.add(curToken);
-//                System.out.println("\n 1 STACK" + stack + "\n 1 LIST" + rpnList.toString());
-                continue;
-            }
-
-            if (curType.getPriority() < 0){
                 continue;
             }
 
@@ -71,18 +76,19 @@ public class RpnConvertor {
             }
 
             // Если символ - закрывающаяся скобка )
-            if(curType == Lexem.CLOSE_BRACKET) {
-//                System.out.println("before while " + stack.indexOf(stack.peek()) + stack.peek().toString());
+            if (curType == Lexem.CLOSE_BRACKET) {
                 // до тех пор, пока верхний эл-т стека не окжется отк скобкой,
                 // вытеснять их в выходной список (скобки удалть)
                 while (stack.peek().getLexem() != Lexem.OPEN_BRACKET) {
-//                    System.out.println(stack.indexOf(stack.peek()) + stack.peek().toString());
                     rpnList.add(stack.pop());
-//                    System.out.println("end of body while " + stack.indexOf(stack.peek()) + stack.peek().toString());
                 }
                 stack.pop();
-//                System.out.println("after while " + stack.indexOf(stack.peek()) + stack.peek().toString());
 
+                continue;
+            }
+
+            // Если символ - фигурная открывающаяся скобка {
+            if (curType == Lexem.OPEN_BRACE) {
                 if (!rpnWithTrans.empty()) {
                     rpnList.add(new Token(Lexem.VAR, "p_" + Integer.toString(++transNumb)));
                     rpnList.add(new Token(Lexem.FALSE_TRANS, "!F"));
@@ -101,12 +107,12 @@ public class RpnConvertor {
                         String varTrans = "p_" + Integer.toString(++transNumb);
                         rpnList.add(new Token(Lexem.VAR, varTrans));
                         rpnList.add(new Token(Lexem.UNCONDITIONAL_TRANSITION, "!"));
-//                        System.out.println("\n 2 STACK" + stack + "\n2 LIST" + rpnList.toString());
-                        varTable.add(varTrans, Integer.toString(whileKwPosit.pop()));
+                        VarTable.getInstance().add(varTrans, whileKwPosit.pop());
                     }
-                    varTable.add("p_" + Integer.toString(oldTransNumb),
-                            Integer.toString(falseTransPointer));
+                    VarTable.getInstance().add("p_" + Integer.toString(oldTransNumb), falseTransPointer);
+                    rpnWithTrans.pop();
                 }
+                continue;
             }
 
             if (curType == Lexem.IF_KW || curType == Lexem.WHILE_KW) {
@@ -114,7 +120,6 @@ public class RpnConvertor {
                 if (curType == Lexem.WHILE_KW) {
                     whileKwPosit.push(rpnList.size());
                 }
-//                System.out.println("\n 2_3 STACK" + stack + "\n2_3 LIST" + rpnList.toString() + "\nRPN" + rpnWithTrans);
                 continue;
             }
 
@@ -123,27 +128,16 @@ public class RpnConvertor {
                 stack.push(curToken);
             } else {
                 Token topToken = stack.pop();
-//                System.out.println("1 " + topToken.toString());
                 // Если стек не пуст и приоритет входыщего символа меньше или равен приоритету верхнего элемента стека,
 
                 while (!stack.empty() && topToken.getLexem().getPriority() >= curType.getPriority()) {
-//                    System.out.println("2 " + topToken.toString());
                     // вытеснять верхний элемент стека в выходной спи.сок до тех пор, пока условие выполняется
                     rpnList.add(topToken);
                     topToken = stack.pop();
-//                    System.out.println("3 " + topToken.toString());
                 }
                 stack.push(topToken);
                 stack.push(curToken);
             }
-//            System.out.println("\n 3 STACK" + stack + "\n3 LIST" + rpnList.toString());
-
-//            try {
-//                Thread.sleep(1000);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-
         }
 
         // когда входные элемент закончились, вытеснить остающиеся в стеке элементы в выходной список

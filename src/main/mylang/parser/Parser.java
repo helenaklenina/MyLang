@@ -12,18 +12,18 @@ public class Parser {
     private ListIterator<Token> iterator;
     private final List<Token> tokens;
     private Stack<Integer> depths;
-    int t = -1;
-    Token endToken = new Token("end");
+//    int t = -1;
+//    boolean closed = true;
+//    Token endToken = new Token("end");
 
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
         this.depths = new Stack<>();
         this.iterator = tokens.listIterator();
-
     }
 
     public void lang() throws LangParseException, EofException {
-        while(!end()) {
+        while (iterator.hasNext()) {
             expr();
         }
     }
@@ -32,45 +32,41 @@ public class Parser {
 //        boolean already = true;
         depths.push(0);
         try {
-            System.out.println("==================== try assign exp .....");
+//            System.out.println("==================== try assign exp .....");
             assignExpr();
         } catch (LangParseException e){
             try{
-                System.out.println("==================== try log if or while .....");
+//                System.out.println("==================== try log if or while .....");
                 back(depths.pop());
                 depths.push(0);
                 log_kw_op();
             } catch (LangParseException ex){
                 try {
-                    System.out.println("==================== try to output or input .....");
+//                    System.out.println("==================== try to output or input .....");
                     back(depths.pop());
                     depths.push(0);
                     input_output();
                 } catch (LangParseException exc) {
-//                    try {
-////                        if (!already) {
-//                            back(depths.pop());
-//                            depths.push(0);
-//                            expr();
-////                        }
-//                    } catch (LangParseException exce) {
-//                        try {
-//                            already = false;
-//                            back(depths.pop());
-//                            depths.push(0);
-//                            close_residuary();
-//                        }catch (LangParseException excep) {
-                            throw new LangParseException(
-                                    e.getMessage() + " / "
-                                            + ex.getMessage()+ " / "
-                                                    + exc.getMessage()
-//                                            + " / "
-//                                                            + exce.getMessage()
-//                                                            + " / "
-//                                                                    + excep.getMessage()
-                            );
-//                        }
-//                    }
+                    try {
+//                        System.out.println("==================== try to list & it's methos .....");
+                        back(depths.pop());
+                        depths.push(0);
+                        listExpr();
+                    } catch (LangParseException exce) {
+                         try {
+                             back(depths.pop());
+                             depths.pop();
+                             method_call();
+                         } catch (LangParseException excep) {
+                             throw new LangParseException(
+                                     e.getMessage() + " / "
+                                             + ex.getMessage()+ " / "
+                                                    + exc.getMessage() + " / "
+                                                            + exce.getMessage() + " / "
+                                                                    + excep.getMessage()
+                             );
+                         }
+                    }
 
                 }
             }
@@ -78,24 +74,80 @@ public class Parser {
         depths.pop();
     }
 
-    private void close_residuary() throws LangParseException, EofException {
+    private void method_call() throws LangParseException, EofException {
+        var();
+        method();
+        try {
+            depths.push(0);
+            valueExpr();
+        }catch (LangParseException e) {
+            back(depths.pop());
+            depths.push(0);
+        }
+        end_line();
+    }
+
+    private void method() throws EofException, LangParseException {
         depths.push(0);
         try {
-            close_brace();
+            add();
         }catch (LangParseException e) {
             try {
                 back(depths.pop());
                 depths.push(0);
-                close_bracket();
+                get();
             }catch (LangParseException ex) {
-                throw new LangParseException(
-                        e.getMessage() + " / "
-                                + ex.getMessage()
-                );
+                try {
+                    back(depths.pop());
+                    depths.push(0);
+                    size();
+                } catch (LangParseException exc) {
+                    try {
+                        back(depths.pop());
+                        depths.push(0);
+                        remove();
+                    } catch (LangParseException exce) {
+                        try {
+                            back(depths.pop());
+                            depths.push(0);
+                            isEmpty();
+                        } catch (LangParseException excep) {
+                            throw new LangParseException(
+                                    e.getMessage() + " / "
+                                            + ex.getMessage()+ " / "
+                                                    + exc.getMessage() + " / "
+                                                            + exce.getMessage() + " / "
+                                                                    + excep.getMessage()
+                            );
+                        }
+                    }
+                }
             }
         }
+
         depths.pop();
     }
+
+    private void add() throws EofException, LangParseException {
+        match(getCurrentToken(), Lexem.ADD);
+    }
+
+    private void get() throws EofException, LangParseException {
+        match(getCurrentToken(), Lexem.GET);
+    }
+
+    private void size() throws EofException, LangParseException {
+        match(getCurrentToken(), Lexem.SIZE);
+    }
+
+    private void remove() throws EofException, LangParseException {
+        match(getCurrentToken(), Lexem.REMOVE);
+    }
+
+    private void isEmpty() throws EofException, LangParseException {
+        match(getCurrentToken(), Lexem.EMPTY);
+    }
+
 
     private boolean end() {
         System.out.println("successfully PRSERed  \n");
@@ -105,64 +157,85 @@ public class Parser {
     private void assignExpr() throws LangParseException, EofException {
         var();
         assignOp();
-        bodyExpr();
+        valueExpr();
+        end_line();
     }
 
-    private void bodyExpr() throws EofException, LangParseException {
-        System.out.println("==================== try bodyExpr");
-        boolean already_been = false;
+    private void valueExpr() throws LangParseException, EofException {
+//        System.out.println("==================== valueExpr .....");
         depths.push(0);
-        depths.push(0);
-        try {
-            value();
-            end_line();
-            already_been = true;
-        }catch (LangParseException e) {
-            try {
-                back(depths.pop() + 1);
-                depths.push(0);
-                System.out.println(depths.size());
-                arithmBody();
-            }catch (LangParseException ex) {
-                throw new LangParseException(
-                        e.getMessage() + " / "
-                                + ex.getMessage()
-                );
-            }
-        }
-        if (!already_been) {
-            end_line();
-        }
-
-        depths.pop();
-    }
-
-    private void arithmBody() throws EofException, LangParseException {
-        System.out.println("================== try arithmBody");
-        depths.push(0);
-        try {
-            value();
-            op();
-            bodyExpr();
-        }catch (LangParseException e) {
+        try{
+            var();
+        } catch (LangParseException e) {
             try {
                 back(depths.pop());
                 depths.push(0);
-                op_bracket();
-            }catch (LangParseException ex) {
-                throw new LangParseException(
-                        e.getMessage() + " / "
-                                + ex.getMessage()
-                );
+                digit();
+            } catch (LangParseException exp){
+                try {
+                    back(depths.pop());
+                    depths.push(0);
+//                    System.out.println("---------tird try------");
+                    arithmExpr();
+                } catch (LangParseException exc) {
+                    throw new LangParseException(
+                            e.getMessage() + " / "
+                                    + exp.getMessage() + "/"
+                                            +exc.getMessage()
+                    );
+                }
             }
         }
+
+        try {
+
+            while (true) {
+                depths.push(0);
+                op();
+                arithmExpr();
+                depths.pop();
+            }
+        } catch (LangParseException e) {
+            back(depths.pop());
+        }
+
         depths.pop();
     }
 
-    private void op_bracket() throws EofException, LangParseException {
-        open_bracket();
-        arithmBody();
-        close_bracket();
+
+    private void arithmExpr() throws EofException, LangParseException {
+//        System.out.println("================== try arithmBody");
+        try {
+            depths.push(0);
+            open_bracket();
+        }catch (LangParseException e) {
+            back(depths.pop());
+            depths.push(0);
+        }
+
+        valueExpr();
+
+        try {
+
+            while (true) {
+                depths.push(0);
+                op();
+                arithmExpr();
+                depths.pop();
+            }
+        } catch (LangParseException e) {
+            back(depths.pop());
+        }
+
+        try {
+            depths.push(0);
+            close_bracket();
+            depths.pop();
+        }catch (LangParseException e) {
+            back(depths.pop());
+        }
+
+        depths.pop();
     }
 
     private void mulDiv() throws LangParseException, EofException {
@@ -176,7 +249,7 @@ public class Parser {
     }
 
     private void op() throws LangParseException {
-        System.out.println("==================== OPeration .....");
+//        System.out.println("==================== OPeration .....");
         depths.push(0);
         try{
             plusMinus();
@@ -195,36 +268,18 @@ public class Parser {
         depths.pop();
     }
 
-    private void value() throws LangParseException, EofException {
-        System.out.println("==================== body is value .....");
-        depths.push(0);
-        try{
-            var();
-        } catch (LangParseException e) {
-            try {
-                back(depths.pop());
-                depths.push(0);
-                digit();
-            } catch (LangParseException ex){
-                throw new LangParseException(
-                        e.getMessage() + " / "
-                                + ex.getMessage()
-                );
-            }
-        }
-
-        depths.pop();
-    }
-
     private void var() throws LangParseException, EofException {
+//        System.out.println("==================== VAR .....");
         match(getCurrentToken(), Lexem.VAR);
     }
 
     private void assignOp() throws LangParseException, EofException {
+//        System.out.println("==================== assign .....");
         match(getCurrentToken(), Lexem.ASSIGN_OP);
     }
 
     private void digit() throws LangParseException, EofException {
+//        System.out.println("==================== Digit .....");
         match(getCurrentToken(), Lexem.DIGIT);
     }
 
@@ -249,13 +304,13 @@ public class Parser {
     }
 
     private void log_condition() throws LangParseException, EofException {
-        System.out.println("========================= try log IF");
+//        System.out.println("========================= try log IF");
         if_log();
         log_body();
     }
 
     private void log_circle() throws LangParseException, EofException {
-        System.out.println("========================= try log WHILE");
+//        System.out.println("========================= try log WHILE");
         while_log();
         log_body();
     }
@@ -282,7 +337,7 @@ public class Parser {
 
 
     private void log_bracket() throws LangParseException, EofException {
-        System.out.println("========================= try to to a logic expr");
+//        System.out.println("========================= try to to a logic expr");
         open_bracket();
         log_expression();
         close_bracket();
@@ -293,37 +348,56 @@ public class Parser {
     }
 
     private void log_expression() throws LangParseException, EofException {
-        value();
+        valueExpr();
         log_op();
-        value();
+        valueExpr();
     }
 
 
     private void log_op() throws LangParseException, EofException {
+//        System.out.println("======================= LOG OPERATION");
         match(getCurrentToken(), Lexem.LOGIC_OP);
     }
 
     private void close_bracket() throws LangParseException, EofException {
+//        System.out.println("------close-bracket-----------");
         match(getCurrentToken(), Lexem.CLOSE_BRACKET);
     }
 
     private void log_body() throws LangParseException, EofException {
         open_brace();
-        expr();
+        int count = 0;
+        try {
+            while (true) {
+                depths.push(0);
+                expr();
+                depths.pop();
+                count++;
+            }
+        }catch (LangParseException e){
+            if (count > 0) {
+                back(depths.pop());
+            }else {
+                throw e;
+            }
+        }
         close_brace();
     }
 
 
     private void open_brace() throws LangParseException, EofException {
+//        System.out.println("------   {    --------");
         match(getCurrentToken(), Lexem.OPEN_BRACE);
     }
 
 
     private void close_brace() throws LangParseException, EofException {
+//        System.out.println("------   }    --------");
         match(getCurrentToken(), Lexem.CLOSE_BRACE);
     }
 
     private void end_line() throws LangParseException, EofException {
+//        System.out.println("==================== EndLine .....");
         match(getCurrentToken(), Lexem.END_LINE);
     }
 
@@ -348,18 +422,16 @@ public class Parser {
     }
 
     private void outPut() throws EofException, LangParseException {
-        System.out.println("==================== try to output ");
+//        System.out.println("==================== try to output ");
         outPut_op();
-        // СДЕЛАТЬ ЗАВИСИМОСТЬ ОТ ТИПА
-        value();
+        valueExpr();
         end_line();
     }
 
     private void inPut() throws EofException, LangParseException {
-        System.out.println("==================== try to input ");
+//        System.out.println("==================== try to input ");
         inPut_op();
-        // СДЕЛАТЬ ЗАВИСИМОСТЬ ОТ ТИПА
-        value();
+        valueExpr();
         end_line();
 
     }
@@ -372,7 +444,19 @@ public class Parser {
         match(getCurrentToken(), Lexem.INPUT_OP);
     }
 
+    private void listExpr() throws EofException, LangParseException {
+        listType();
+        var();
+        end_line();
+    }
+
+    private void listType() throws EofException, LangParseException {
+//        System.out.println("==================== ListType .....");
+        match(getCurrentToken(), Lexem.LIST);
+    }
+
     private void match(Token token, Lexem lexem) throws LangParseException {
+
         if (!token.getLexem().equals(lexem)) {
             throw new LangParseException( lexem.name() + " expected " +
                     "but " + token.getLexem().name() + " found");
@@ -389,20 +473,12 @@ public class Parser {
 
     private Token getCurrentToken() throws EofException {
         if (!iterator.hasNext()) {
-            if (end()) {
-                System.out.println("Parser is " + end());
-            }
+             end();
         }
-//        if (iterator.hasNext()) {
-//            System.out.println(Integer.toString(t + 1) + ' ' + tokens.get(t + 1).getLexem());
-//            return tokens.get(++t);
-//        } else {
-//            throw new EofException("EOF");
-//        }
-        if (iterator.hasNext()) {
+        if(iterator.hasNext()) {
             Token token = iterator.next();
             depths.push(depths.pop()+1);
-            System.out.println(token.toString() );
+//            System.out.println(token.toString() );
             return token;
         } else {
             throw new EofException("EOF");

@@ -1,59 +1,49 @@
 package main.mylang.var_table;
 
+import main.mylang.token.Token;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class VarTable {
-    public String value;
-
-//    private class VarData {
-//        public String value;
-//
-//        public VarData(String type, String value) {
-//            this.value = value;
-//        }
-//
-//        public String toString() {
-//            return value;
-//        }
-//    }
-
-    private HashMap<String, String> hashMap;
+    private HashMap<String, Integer> hashMap;
+    private static VarTable instance;
 
     public VarTable() {
+
         hashMap = new HashMap<>();
     }
 
-    public void add(String var, String value) {
+    public static VarTable getInstance() {
+        if (instance == null) {
+            instance = new VarTable();
+        }
+
+        return instance;
+    }
+
+    public void add(String var, Integer value) {
         hashMap.put(var,  value);
     }
 
-//    public void add(String var, String type, String value) {
-//        hashMap.put(var, value);
+//    public void setValue(String transitionVarName, int transitionVarValue) {
 //    }
 
-//    public String getType(String var) {
-//        return hashMap.get(var).type;
-//    }
-
-    public String getValue(String var) {
+    public int getValue(String  var) throws NullPointerException{
         return hashMap.get(var);
     }
 
-//    public void setType(String var, String type) {
-//        hashMap.get(var).type = type;
-//    }
-
-    public void setNewValue(String var, String value) {
+    public void setNewValue(String var, Integer value) {
         hashMap.replace(var, value);
-
     }
+
 
     public String toString() {
         StringBuilder builder = new StringBuilder("{");
         boolean first = true;
 
-        for (Map.Entry<String, String> entry : hashMap.entrySet()) {
+        for (Map.Entry<String, Integer> entry : hashMap.entrySet()) {
             if (!first) {
                 builder.append(", ");
             }
@@ -63,6 +53,26 @@ public class VarTable {
         builder.append("}");
 
         return builder.toString();
+    }
+
+    public void remove(String var) {
+        hashMap.remove(var);
+    }
+
+    public Set<String> keySet() {
+        return hashMap.keySet();
+    }
+
+    public Map<String, Integer> getData() {
+        return hashMap;
+    }
+
+    public void setData(Map<String, Integer> data) {
+        hashMap = new HashMap<>(data);
+    }
+
+    public void clear() {
+        hashMap.clear();
     }
 
 }
